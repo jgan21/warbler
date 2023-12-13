@@ -40,6 +40,12 @@ def add_user_to_g():
     else:
         g.user = None
 
+@app.before_request
+def add_csrf_to_g():
+    """Add CSRFProtectForm() to Flask global."""
+
+    g.csrf_form = CSRFProtectForm()
+
 
 
 def do_login(user):
@@ -205,9 +211,7 @@ def start_following(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = g.csrf_form
-
-    if form.validate_on_submit:
+    if g.csrf_form.validate_on_submit:
         followed_user = User.query.get_or_404(follow_id)
         g.user.following.append(followed_user)
         db.session.commit()
@@ -228,15 +232,16 @@ def stop_following(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = g.csrf_form
-
-    if form.validate_on_submit:
+    if g.csrf_form.validate_on_submit:
         followed_user = User.query.get_or_404(follow_id)
         g.user.following.remove(followed_user)
 
         db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following", form=form)
+        return redirect(f"/users/{g.user.id}/following")
+
+    else:
+        raise Unauthorized()
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
