@@ -115,16 +115,14 @@ def login():
 def logout():
     """Handle logout of user and redirect to homepage."""
 
-    g.csrf_form = CSRFProtectForm()
     form = g.csrf_form
 
     # IMPLEMENT THIS AND FIX BUG
-    # TODO: ^^ This
     # DO NOT CHANGE METHOD ON ROUTE
 
     if form.validate_on_submit():
         do_logout()
-        # session.pop(CURR_USER_KEY, None)
+        # TODO: add flash message here
 
     return redirect('/login')
 
