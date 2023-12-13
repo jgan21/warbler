@@ -8,6 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
 from models import db, connect_db, User, Message
 
+from werkzeug.exceptions import Unauthorized
+
 load_dotenv()
 
 CURR_USER_KEY = "curr_user"
@@ -33,9 +35,11 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
+        g.csrf_form = CSRFProtectForm()
 
     else:
         g.user = None
+
 
 
 def do_login(user):
@@ -44,7 +48,7 @@ def do_login(user):
     session[CURR_USER_KEY] = user.id
 
 
-def do_logout():
+def do_logout(user):
     """Log out user."""
 
     if CURR_USER_KEY in session:
@@ -115,6 +119,8 @@ def login():
 def logout():
     """Handle logout of user and redirect to homepage."""
 
+    #FIXME: g.csrf_form is repeated in homepage.
+    # g.csrf_form = CSRFProtectForm()
     form = g.csrf_form
 
     # IMPLEMENT THIS AND FIX BUG
@@ -122,7 +128,7 @@ def logout():
 
     if form.validate_on_submit():
         do_logout()
-        # TODO: add flash message here
+        flash("You've successfully logged out!")
 
     return redirect('/login')
 
@@ -199,11 +205,17 @@ def start_following(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.append(followed_user)
-    db.session.commit()
+    form = g.csrf_form
 
-    return redirect(f"/users/{g.user.id}/following")
+    if form.validate_on_submit:
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.append(followed_user)
+        db.session.commit()
+
+        return redirect(f"/users/{g.user.id}/following")
+
+    else:
+        raise Unauthorized()
 
 
 @app.post('/users/stop-following/<int:follow_id>')
@@ -212,16 +224,19 @@ def stop_following(follow_id):
 
     Redirect to following page for the current for the current user.
     """
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.remove(followed_user)
-    db.session.commit()
+    form = g.csrf_form
 
-    return redirect(f"/users/{g.user.id}/following")
+    if form.validate_on_submit:
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.remove(followed_user)
+
+        db.session.commit()
+
+    return redirect(f"/users/{g.user.id}/following", form=form)
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
@@ -319,7 +334,7 @@ def homepage():
     - logged in: 100 most recent messages of self & followed_users
     """
 
-    g.csrf_form = CSRFProtectForm()
+    # g.csrf_form = CSRFProtectForm()
     form = g.csrf_form
 
     if g.user:
