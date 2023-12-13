@@ -35,7 +35,6 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-        g.csrf_form = CSRFProtectForm()
 
     else:
         g.user = None
@@ -47,14 +46,13 @@ def add_csrf_to_g():
     g.csrf_form = CSRFProtectForm()
 
 
-
 def do_login(user):
     """Log in user."""
 
     session[CURR_USER_KEY] = user.id
 
 
-def do_logout(user):
+def do_logout():
     """Log out user."""
 
     if CURR_USER_KEY in session:
@@ -125,17 +123,16 @@ def login():
 def logout():
     """Handle logout of user and redirect to homepage."""
 
-    #FIXME: g.csrf_form is repeated in homepage.
-    # g.csrf_form = CSRFProtectForm()
-    form = g.csrf_form
-
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
 
-    if form.validate_on_submit():
-        do_logout()
-        flash("You've successfully logged out!")
+    if not g.csrf_form.validate_on_submit() or not g.user:
+        # GOOD LOGIC TO REMEMBER ^^
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
+    do_logout()
+    flash("You've successfully logged out!")
     return redirect('/login')
 
 
