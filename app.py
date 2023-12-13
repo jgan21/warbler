@@ -251,8 +251,6 @@ def profile():
 
     user = User.query.get_or_404(g.user.id)
 
-    {username, email } = **user
-
     form = UserEditForm(obj=user)
 
     if form.validate_on_submit:
