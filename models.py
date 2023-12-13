@@ -44,7 +44,7 @@ class User(db.Model):
     id = db.Column(
         db.Integer,
         primary_key=True,
-        # FIXME: does this need autoincrement=True, ?
+        autoincrement=True,
     )
 
     email = db.Column(
@@ -164,7 +164,7 @@ class Message(db.Model):
     id = db.Column(
         db.Integer,
         primary_key=True,
-        # FIXME: no autoincrement=True, ?
+        autoincrement=True,
     )
 
     text = db.Column(

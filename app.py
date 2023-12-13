@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, UserEditForm
 from models import db, connect_db, User, Message
 
 from werkzeug.exceptions import Unauthorized
@@ -243,9 +243,41 @@ def stop_following(follow_id):
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
-    """Update profile for current user."""
+    """Edit profile for current user."""
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(g.user.id)
+
+    {username, email } = **user
+
+    form = UserEditForm(obj=user)
+
+    if form.validate_on_submit:
+
+        user_check = User.authenticate(user.username, user.password)
+        if user_check:
+            user.email = form.email.data
+            user.username = form.username.data
+            user.image_url = form.image_url.data
+            user.header_image_url = form.header_image_url.data
+            user.bio = form.bio.data
+
+            try:
+                db.session.commit()
+                return redirect(f'/users/{user.id}')
+
+            except IntegrityError:
+                flash("Update failed.")
+                return render_template('/users/edit.html', form=form)
+
+        else:
+            flash("Invalid password!")
+            return render_template('/users/edit.html', form=form)
+
+    return render_template('/users/detail.html', form=form, user=user)
 
 
 @app.post('/users/delete')
@@ -265,6 +297,11 @@ def delete_user():
     db.session.commit()
 
     return redirect("/signup")
+
+
+# @app.route("/users/<int:user_id>/edit", methods=["GET", "POST"])
+# def edit_profile(user_id):
+
 
 
 ##############################################################################
