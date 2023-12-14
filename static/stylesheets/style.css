@@ -194,6 +194,12 @@ nav + .container {
 
 .message-area {
   margin-left: 10px;
+  z-index: 1;
+}
+
+div#star-area {
+  display: inline-block;
+  z-index: 10;
 }
 
 #warbler-hero {

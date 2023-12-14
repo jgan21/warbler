@@ -366,17 +366,21 @@ def liking_message(message_id):
     msg = Message.query.get_or_404(message_id)
 
     if g.csrf_form.validate_on_submit():
+
         curr_url = request.form.get("location")
         print("curr_url=", curr_url)
+
         if msg in g.user.liked:
             g.user.liked.remove(msg)
+            db.session.commit()
         else :
             g.user.liked.append(msg)
+            db.session.commit()
 
-    db.session.commit()
+        return redirect(f"{curr_url}")
 
-    return redirect(f"/{curr_url}")
-
+    else:
+        raise Unauthorized()
 
 
 @app.post('/messages/<int:message_id>/delete')

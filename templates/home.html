@@ -45,21 +45,22 @@
   <div class="col-lg-6 col-md-8 col-sm-12">
     <ul class="list-group" id="messages">
       {% for msg in messages %}
-      <div class="star-area">
-        <form method="POST" action="/messages/{{ msg.id }}/liked">
-          {{ g.csrf_form.hidden_tag() }}
-          <button class="btn btn-primary">
-            <input type="hidden" name="location" value="/">
-            {% if msg in g.user.liked %}
-            <i class="bi bi-star"></i>
-            {% else %}
-            <i class="bi bi-star-fill"></i>
-          </button>
-          {% endif %}
-        </form>
-      </div>
-
       <li class="list-group-item">
+
+        <div id="star-area">
+          <form method="POST" action="/messages/{{ msg.id }}/liked">
+            {{ g.csrf_form.hidden_tag() }}
+            <button class="btn btn-primary">
+              <input type="hidden" name="location" value="/">
+              {% if msg in g.user.liked %}
+              <i class="bi bi-star-fill"></i>
+              {% else %}
+              <i class="bi bi-star"></i>
+            </button>
+            {% endif %}
+          </form>
+        </div>
+
         <a href="/messages/{{ msg.id }}" class="message-link"></a>
         <a href="/users/{{ msg.user.id }}">
           <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
@@ -69,7 +70,6 @@
           <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
           <p>{{ msg.text }}</p>
         </div>
-
       </li>
       {% endfor %}
     </ul>
