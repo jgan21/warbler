@@ -48,7 +48,7 @@
       <ul class="list-group" id="messages">
         {% for msg in messages %}
           <li class="list-group-item">
-            <a href="/messages/{{ msg.id }}" class="message-link"/>
+            <a href="/messages/{{ msg.id }}" class="message-link"></a>
             <a href="/users/{{ msg.user.id }}">
               <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
             </a>
@@ -56,6 +56,23 @@
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
+            </div>
+            <div class="star-area">
+
+      <!-- TODO: make it so that it's like the top portion (msg.user.id) -->
+
+              <form method="POST"
+              action="/liked-msg">
+              {{ g.csrf_form.hidden_tag() }}
+                <button class="btn btn-primary">
+                  {% if g.user.liked %}
+                  <i class="bi bi-star-fill"></i>
+                  {% else %}
+                  <i class="bi bi-star"></i>
+                </button>
+                {% endif %}
+              </form>
+
             </div>
           </li>
         {% endfor %}

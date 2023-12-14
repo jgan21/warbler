@@ -98,6 +98,12 @@ class User(db.Model):
         backref="following",
     )
 
+    liked = db.relationship(
+        'Message',
+        secondary="liked_msgs",
+        backref="users"
+    )
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
@@ -194,3 +200,21 @@ def connect_db(app):
     app.app_context().push()
     db.app = app
     db.init_app(app)
+
+
+class LikedMsgs(db.Model):
+    """Connection of a liked message <-> user."""
+
+    __tablename__ = 'liked_msgs'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )

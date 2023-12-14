@@ -294,10 +294,18 @@ def delete_user():
     if g.csrf_form.validate_on_submit():
         do_logout()
 
-    db.session.delete(g.user)
-    db.session.commit()
+        # TODO: add delete messages before deleting user (if they have any)
+        # for message in g.user.messages:
+        #     db.session.delete(message)
 
-    return redirect("/signup")
+
+        db.session.delete(g.user)
+        db.session.commit()
+
+        return redirect("/signup")
+
+    else:
+        raise Unauthorized()
 
 
 # @app.route("/users/<int:user_id>/edit", methods=["GET", "POST"])
