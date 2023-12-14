@@ -3,10 +3,12 @@ from dotenv import load_dotenv
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, PendingRollbackError
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, UserEditForm
-from models import db, connect_db, User, Message
+from forms import (
+    UserAddForm, LoginForm, MessageForm, CSRFProtectForm, UserEditForm)
+from models import (
+    db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL)
 
 from werkzeug.exceptions import Unauthorized
 
@@ -121,7 +123,7 @@ def login():
 
 @app.post('/logout')
 def logout():
-    """Handle logout of user and redirect to homepage."""
+    """Handle logout of user and redirect to login page. """
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
@@ -242,40 +244,40 @@ def stop_following(follow_id):
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
-def profile():
+def edit_profile():
     """Edit profile for current user."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    user = User.query.get_or_404(g.user.id)
-
+    # user = User.query.get_or_404(g.user.id)
+    user = g.user
     form = UserEditForm(obj=user)
 
-    if form.validate_on_submit:
+    if form.validate_on_submit():
+        try:
+            if User.authenticate(user.username, form.password.data):
+                user.email = form.email.data
+                user.username = form.username.data
+                user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
+                user.header_image_url = (
+                    form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL)
+                user.bio = form.bio.data
 
-        user_check = User.authenticate(user.username, user.password)
-        if user_check:
-            user.email = form.email.data
-            user.username = form.username.data
-            user.image_url = form.image_url.data
-            user.header_image_url = form.header_image_url.data
-            user.bio = form.bio.data
-
-            try:
                 db.session.commit()
-                return redirect(f'/users/{user.id}')
 
-            except IntegrityError:
-                flash("Update failed.")
+            else:
+                flash("Invalid password!", 'danger')
                 return render_template('/users/edit.html', form=form)
 
-        else:
-            flash("Invalid password!")
+        except IntegrityError:
+            flash("Username already taken", 'danger')
             return render_template('/users/edit.html', form=form)
 
-    return render_template('/users/detail.html', form=form, user=user)
+        return redirect(f'/users/{user.id}')
+
+    return render_template('/users/edit.html', form=form)
 
 
 @app.post('/users/delete')
@@ -289,7 +291,8 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
+    if g.csrf_form.validate_on_submit():
+        do_logout()
 
     db.session.delete(g.user)
     db.session.commit()
@@ -352,11 +355,12 @@ def delete_message(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    msg = Message.query.get_or_404(message_id)
-    db.session.delete(msg)
-    db.session.commit()
+    if g.csrf_form.validate_on_submit():
+        msg = Message.query.get_or_404(message_id)
+        db.session.delete(msg)
+        db.session.commit()
 
-    return redirect(f"/users/{g.user.id}")
+        return redirect(f"/users/{g.user.id}")
 
 
 ##############################################################################
@@ -371,17 +375,17 @@ def homepage():
     - logged in: 100 most recent messages of self & followed_users
     """
 
-    # g.csrf_form = CSRFProtectForm()
-    form = g.csrf_form
-
     if g.user:
+        curr_following_ids = [f.id for f in g.user.following] + [g.user.id]
+
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(curr_following_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form=form)
+        return render_template('home.html', messages=messages)
 
     else:
         return render_template('home-anon.html')
