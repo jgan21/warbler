@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
-from sqlalchemy.exc import IntegrityError, PendingRollbackError
+from sqlalchemy.exc import IntegrityError
 
 from forms import (
     UserAddForm, LoginForm, MessageForm, CSRFProtectForm, UserEditForm)
@@ -349,6 +349,34 @@ def show_message(message_id):
 
     msg = Message.query.get_or_404(message_id)
     return render_template('messages/show.html', message=msg)
+
+
+@app.post('/messages/<int:message_id>/liked')
+def liking_message(message_id):
+    """Liking a message, adding it into the database
+    and removing message if unliked."""
+
+    #redirect back to same place
+
+    print("messages=", g.user.liked)
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    msg = Message.query.get_or_404(message_id)
+
+    if g.csrf_form.validate_on_submit():
+        curr_url = request.form.get("location")
+        print("curr_url=", curr_url)
+        if msg in g.user.liked:
+            g.user.liked.remove(msg)
+        else :
+            g.user.liked.append(msg)
+
+    db.session.commit()
+
+    return redirect(f"/{curr_url}")
+
 
 
 @app.post('/messages/<int:message_id>/delete')
