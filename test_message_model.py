@@ -83,4 +83,3 @@ class UserModelTestCase(TestCase):
     #     # TODO: double quotes are for naming something
     #     # TODO: use single quotes on psql
 
-    def
