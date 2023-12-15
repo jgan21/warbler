@@ -220,6 +220,8 @@ def show_likes(user_id):
                 .order_by(Message.timestamp.desc())
                 .limit(100)
                 .all())
+    # TODO: this is ordered by timestamp which is good
+    # originally could've done g.user.liked and parsed through
 
     return render_template(f'users/liked.html', user=user, messages=messages)
 
@@ -368,6 +370,7 @@ def show_message(message_id):
 
 @app.post('/messages/<int:message_id>/liked')
 def liking_message(message_id):
+    # TODO: consider "toggle_message", "toggle_liked"
     """Liking a message, adding it into the database
     and removing message if unliked."""
 

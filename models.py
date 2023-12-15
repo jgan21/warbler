@@ -104,6 +104,7 @@ class User(db.Model):
         secondary="liked_msgs",
         backref="users",
     )
+    # TODO: indicate that liked is plural; consider "liked_messages"
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -207,6 +208,8 @@ class LikedMsgs(db.Model):
     """Connection of a liked message <-> user."""
 
     __tablename__ = 'liked_msgs'
+    # TODO: consider spelling out messages instead of msgs to pattern match
+    # the rest of the codebase
 
     user_id = db.Column(
         db.Integer,
