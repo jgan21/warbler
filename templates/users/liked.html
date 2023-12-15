@@ -51,6 +51,7 @@
 
       <li class="list-group-item">
 
+        {% if not message in g.user.messages %}
         <div id="star-area">
           <form method="POST"
             action="/messages/{{ message.id }}/liked">
@@ -68,6 +69,7 @@
             {% endif %}
           </form>
         </div>
+        {% endif %}
 
         <a href="/messages/{{ message.id }}" class="message-link"></a>
         <a href="/users/{{ message.user.id }}">

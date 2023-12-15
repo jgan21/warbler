@@ -44,6 +44,8 @@
             {{ message.timestamp.strftime('%d %B %Y') }}
           </span>
         </div>
+
+        {% if not message in g.user.messages %}
         <div id="star-area">
           <form method="POST" action="/messages/{{ message.id }}/liked">
             {{ g.csrf_form.hidden_tag() }}
@@ -57,6 +59,7 @@
             {% endif %}
           </form>
         </div>
+        {% endif %}
       </li>
     </ul>
   </div>
