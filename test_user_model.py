@@ -127,16 +127,26 @@ class UserModelTestCase(TestCase):
         self.assertEqual(u3.email, "u3@email.com")
         self.assertEqual(len(User.query.all()), 3)
 
-    def test_user_invalid_signup(self):
+    def test_user_invalid_username_signup(self):
         """Test for invalid username. """
 
         with self.assertRaises(IntegrityError):
             User.signup("u1", "u3@email.com", "password", None)
             db.session.commit()
 
-    def test_user_invalid_signup_2(self):
+    def test_user_invalid_email_signup(self):
         """Test for invalid email address. """
 
         with self.assertRaises(IntegrityError):
             User.signup("u4", "u1@email.com", "password", None)
             db.session.commit()
+
+    def test_user_valid_authenticate(self):
+        """Test for valid user authentication. """
+
+        u1 = User.query.get(self.u1_id)
+
+        self.assertEqual(User.authenticate(u1.username, "password"), u1)
+        self.assertNotEqual(User.authenticate(u1.username, "NotPassword"), u1)
+        self.assertNotEqual(User.authenticate("NotUsername", "NotPassword"), u1)
+
