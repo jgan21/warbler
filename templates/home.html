@@ -58,7 +58,7 @@
           <form method="POST" action="/messages/{{ msg.id }}/liked">
             {{ g.csrf_form.hidden_tag() }}
             <button class="btn btn-primary">
-              <input type="hidden" name="location" value="/">
+              <input type="hidden" name="location" value="{{ request.url }}">
               {% if msg in g.user.liked %}
               <i class="bi bi-star-fill"></i>
               {% else %}

@@ -21,13 +21,12 @@
         <p>{{ message.text }}</p>
       </div>
 
-      <!-- TODO: don't render this star area if it's the user's own message -->
+      {% if message not in g.user.messages %}
       <div id="star-area">
         <form method="POST" action="/messages/{{ message.id }}/liked">
           {{ g.csrf_form.hidden_tag() }}
-          {% if message not in g.user.messages %}
           <button class="btn btn-primary">
-            <input type="hidden" name="location" value="/users/{{ user.id }}">
+            <input type="hidden" name="location" value="{{ request.url }}">
             <!-- TODO: request.url property will give you the url that you're on -->
 
               {% if message in g.user.liked %}
@@ -36,9 +35,9 @@
                 <i class="bi bi-star"></i>
               {% endif %}
           </button>
-          {% endif %}
         </form>
       </div>
+      {% endif %}
 
     </li>
 

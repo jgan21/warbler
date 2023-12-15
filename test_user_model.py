@@ -4,18 +4,19 @@
 #
 #    python -m unittest test_user_model.py
 
-
 import os
 from unittest import TestCase
 
 from models import db, User, Message, Follow
-
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
 # before we import our app, since that will have already
 # connected to the database
 
 os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
+
+from flask import session
+from flask_bcrypt import Bcrypt
 
 # Now we can import app
 
@@ -25,9 +26,20 @@ from app import app
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
 
+# This is a bit of hack, but don't use Flask DebugToolbar
+app.config['DEBUG_TB_HOSTS'] = ['dont-show-debug-toolbar']
+
+# Don't req CSRF for testing
+app.config['WTF_CSRF_ENABLED'] = False
+
+# Make Flask errors be real errors, rather than HTML pages with error info
+app.config['TESTING'] = True
+
 db.drop_all()
 db.create_all()
 
+bcrypt = Bcrypt()
+PASSWORD = bcrypt.generate_password_hash("password", rounds=5).decode("utf-8")
 
 class UserModelTestCase(TestCase):
     def setUp(self):

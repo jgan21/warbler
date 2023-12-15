@@ -370,9 +370,7 @@ def show_message(message_id):
 
 @app.post('/messages/<int:message_id>/liked')
 def liking_message(message_id):
-    # TODO: consider "toggle_message", "toggle_liked"
-    """Liking a message, adding it into the database
-    and removing message if unliked."""
+    """Toggle liking/unliking a message, adding/removing from the database."""
 
     # LOGIC: redirect back to same place
 

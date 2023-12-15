@@ -60,7 +60,7 @@
               <input
                 type="hidden"
                 name="location"
-                value="/users/{{ g.user.id }}/liked">
+                value="{{ request.url}}">
               {% if message in g.user.liked %}
               <i class="bi bi-star-fill"></i>
               {% else %}
