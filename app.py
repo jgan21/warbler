@@ -199,6 +199,31 @@ def show_followers(user_id):
     return render_template('users/followers.html', user=user)
 
 
+@app.get('/users/<int:user_id>/liked')
+def show_likes(user_id):
+    """Show list of liked warbles of this user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    print('This is g.user.liked', g.user.liked)
+
+    liked_msg_ids = [m.id for m in g.user.liked]
+
+    print('This is liked_msg_ids', liked_msg_ids)
+
+    messages = (Message
+                .query
+                .filter(Message.id.in_(liked_msg_ids))
+                .order_by(Message.timestamp.desc())
+                .limit(100)
+                .all())
+
+    return render_template(f'users/liked.html', user=user, messages=messages)
+
+
 @app.post('/users/follow/<int:follow_id>')
 def start_following(follow_id):
     """Add a follow for the currently-logged-in user.
@@ -269,15 +294,15 @@ def edit_profile():
 
             else:
                 flash("Invalid password!", 'danger')
-                return render_template('/users/edit.html', form=form)
+                return render_template('/users/edit.html', form=form, user=user)
 
         except IntegrityError:
             flash("Username already taken", 'danger')
-            return render_template('/users/edit.html', form=form)
+            return render_template('/users/edit.html', form=form, user=user)
 
         return redirect(f'/users/{user.id}')
 
-    return render_template('/users/edit.html', form=form)
+    return render_template('/users/edit.html', form=form, user=user)
 
 
 @app.post('/users/delete')
@@ -294,11 +319,6 @@ def delete_user():
     if g.csrf_form.validate_on_submit():
         do_logout()
 
-        # TODO: add delete messages before deleting user (if they have any)
-        # for message in g.user.messages:
-        #     db.session.delete(message)
-
-
         db.session.delete(g.user)
         db.session.commit()
 
@@ -306,11 +326,6 @@ def delete_user():
 
     else:
         raise Unauthorized()
-
-
-# @app.route("/users/<int:user_id>/edit", methods=["GET", "POST"])
-# def edit_profile(user_id):
-
 
 
 ##############################################################################
@@ -356,26 +371,26 @@ def liking_message(message_id):
     """Liking a message, adding it into the database
     and removing message if unliked."""
 
-    #redirect back to same place
+    # LOGIC: redirect back to same place
 
     print("messages=", g.user.liked)
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    msg = Message.query.get_or_404(message_id)
-
     if g.csrf_form.validate_on_submit():
+
+        msg = Message.query.get_or_404(message_id)
 
         curr_url = request.form.get("location")
         print("curr_url=", curr_url)
 
         if msg in g.user.liked:
             g.user.liked.remove(msg)
-            db.session.commit()
         else :
             g.user.liked.append(msg)
-            db.session.commit()
+
+        db.session.commit()
 
         return redirect(f"{curr_url}")
 
