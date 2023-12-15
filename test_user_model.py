@@ -149,4 +149,3 @@ class UserModelTestCase(TestCase):
         self.assertEqual(User.authenticate(u1.username, "password"), u1)
         self.assertNotEqual(User.authenticate(u1.username, "NotPassword"), u1)
         self.assertNotEqual(User.authenticate("NotUsername", "NotPassword"), u1)
-
