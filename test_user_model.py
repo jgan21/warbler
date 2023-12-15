@@ -13,6 +13,8 @@ from models import db, User, Message, Follow
 # before we import our app, since that will have already
 # connected to the database
 
+from sqlalchemy.exc import IntegrityError
+
 os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 from flask import session
@@ -110,3 +112,31 @@ class UserModelTestCase(TestCase):
         self.assertFalse(u1.is_followed_by(u2))
         self.assertEqual(len(u2.following), 0)
         self.assertNotEqual(len(u2.following), 1)
+
+    def test_user_valid_signup(self):
+        """Test for a successful new user sign up. """
+
+        u3 = User.signup("u3", "u3@email.com", "password", None)
+
+        db.session.commit()
+
+        self.u3_id = u3.id
+        u3 = User.query.get(self.u3_id)
+
+        self.assertEqual(u3.username, "u3")
+        self.assertEqual(u3.email, "u3@email.com")
+        self.assertEqual(len(User.query.all()), 3)
+
+    def test_user_invalid_signup(self):
+        """Test for invalid username. """
+
+        with self.assertRaises(IntegrityError):
+            User.signup("u1", "u3@email.com", "password", None)
+            db.session.commit()
+
+    def test_user_invalid_signup_2(self):
+        """Test for invalid email address. """
+
+        with self.assertRaises(IntegrityError):
+            User.signup("u4", "u1@email.com", "password", None)
+            db.session.commit()
