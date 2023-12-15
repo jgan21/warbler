@@ -56,8 +56,57 @@ class UserModelTestCase(TestCase):
         db.session.rollback()
 
     def test_user_model(self):
+        """Tests that user model has 0 messages and 0 followers."""
         u1 = User.query.get(self.u1_id)
 
         # User should have no messages & no followers
         self.assertEqual(len(u1.messages), 0)
         self.assertEqual(len(u1.followers), 0)
+
+    def test_user1_is_following_user2(self):
+        """Tests that user1 is following user 2."""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        u1.following.append(u2)
+
+        db.session.commit()
+
+        self.assertEqual(len(u1.following), 1)
+        self.assertNotEqual(len(u1.following), 0)
+        self.assertTrue(u1.is_following(u2))
+
+    def test_user1_is_not_following_user2(self):
+        """Tests that user1 is not following user 2."""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        self.assertEqual(len(u1.following), 0)
+        self.assertNotEqual(len(u1.following), 1)
+        self.assertFalse(u1.is_following(u2))
+
+    def test_user1_is_followed_by_user2(self):
+        """Tests that user1 is followed by user2."""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        u2.following.append(u1)
+
+        db.session.commit()
+
+        self.assertTrue(u1.is_followed_by(u2))
+        self.assertEqual(len(u2.following), 1)
+        self.assertNotEqual(len(u2.following), 0)
+
+    def test_user1_is_not_followed_by_user2(self):
+        """Tests that user1 is not followed by user2."""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        self.assertFalse(u1.is_followed_by(u2))
+        self.assertEqual(len(u2.following), 0)
+        self.assertNotEqual(len(u2.following), 1)
